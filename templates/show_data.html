@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Get tweets</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <button id="get_twitter_btn" onclick="toggleTweets()">Click on me!</button>
+    <ul id="tweets_list"></ul>
+    <script>
+        function toggleTweets() {
+            var tweets_list = document.getElementById('tweets_list');
+            if ($('#get_twitter_btn').text() === 'Good job!') {
+                $('#get_twitter_btn').text('Click on me!');
+                tweets_list.style.display = 'none';
+            } else {
+                $('#get_twitter_btn').text('Good job!');
+                tweets_list.style.display = 'block';
+                $.ajax({
+                    url: '/get_tweets',
+                    type: 'POST',
+                    success: function (response) {
+
+                        var tweets = response;
+                        var frequency = {};
+                        for (var i = 0; i < 100; i++) {
+                            const x = tweets[i]['entities']['hashtags'];
+                            if (x.length !== 0){
+                                x.forEach(x => {
+                                    var text = x['text'];
+                                    if (frequency[text]) {
+                                        frequency[text]++;
+                                    } else {
+                                        frequency[text] = 1;
+                                    }
+                                });
+                            }
+                        }
+                        var sorted_frequency = Object.entries(frequency).sort((a, b) => b[1] - a[1]);
+                        var top_10 = sorted_frequency.slice(0, 10);
+                        $('#tweets_list').empty();
+                        top_10.forEach(entry => {
+                            $('#tweets_list').append('<li>' + entry[0] + ' (' + entry[1] + ' times)' + '</li>');
+                        });
+                    },
+                    error: function (error) {
+                        console.log(error);
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>
